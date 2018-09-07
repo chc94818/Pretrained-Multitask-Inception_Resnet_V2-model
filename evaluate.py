@@ -16,6 +16,7 @@ import gc
 import skimage.io as io
 from absl import app
 from absl import flags
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # Parameters
 
 # TFRecords 檔案名稱
@@ -219,16 +220,14 @@ def test(DATA_SIZE):
             
         saver = tf.train.Saver(var_list=tf.global_variables())
         with tf.Session() as sess:                
-            print('###############################################################')
-            print('#####################TEST_SESSION_START########################')
-            print('###############################################################')
+            
 
             # restore model and variables    
             print ("Restore fine-tuned Start!")                    
             sess.run(init_op)   
             restorer.restore(sess, os.path.join(FLAGS.checkpoints_dir, FLAGS.model_name))                 
             print ("Restore  Finished!")
-
+            print('###############################################################')
 
             # create thread coordinator
             coord = tf.train.Coordinator()
@@ -236,12 +235,13 @@ def test(DATA_SIZE):
 
             # get batch num per epoch
             batch_num_per_epoch = int(DATA_SIZE/FLAGS.batch_size)
+            batch_num_total = batch_num_per_epoch
             # confusion matrix
             confusion_matrix_gender = np.zeros([GENDER_CLASS_NUM,GENDER_CLASS_NUM], dtype=float)        
             confusion_matrix_age = np.zeros([AGE_CLASS_NUM,AGE_CLASS_NUM], dtype=float)
 
             # test all batch in test dataset
-            for bp in range(batch_num_per_epoch): 
+            for bp in range(batch_num_total): 
                 # test session         
                 pred_g, pred_a, expc_g, expc_a, acc_g, acc_a, loss_logit_g, loss_logit_a,\
                     loss_auxlogit_g, loss_auxlogit_a, loss_t=  \
@@ -263,12 +263,12 @@ def test(DATA_SIZE):
                     confusion_matrix_age[expc_a[ci],pred_a[ci]] +=1;
 
                 # display middle-term test status
-                if bp % FLAGS.dispaly_every_n_steps == 0:
+                if bp % FLAGS.dispaly_every_n_steps == 0 or bp == batch_num_total-1:
                     print("Iter : " + str(bp+1) +\
                         "\nTesting Total Loss \t\t= {:.12f}".format(loss_t) +\
-                        "\nTesting Gender Logits Loss \t\t= {:.12f}".format(loss_logit_g) +\
+                        "\nTesting Gender Logits Loss \t= {:.12f}".format(loss_logit_g) +\
                         "\nTesting Gender AuxLogits Loss \t= {:.12f}".format(loss_auxlogit_g) +\
-                        "\nTesting Age Logits Loss \t\t= {:.12f}".format(loss_logit_a) +\
+                        "\nTesting Age Logits Loss \t= {:.12f}".format(loss_logit_a) +\
                         "\nTesting Age AuxLogits Loss \t= {:.12f}".format(loss_auxlogit_a))
 
                     print("Gender ACC \t: ",acc_g)
@@ -278,6 +278,7 @@ def test(DATA_SIZE):
                     print("Age ACC \t: ",acc_a)
                     print("Age Expected Value \t: ",expc_a)   
                     print("Age Predict Value \t: ",pred_a)
+                    print('###############################################################')
             # close thread queue
             coord.request_stop()
             coord.join(threads)
@@ -285,20 +286,25 @@ def test(DATA_SIZE):
 def main(argv=None):
     # get total data size
     DATA_SIZE = get_data_size()
-
+    print('###############################################################')
+    print('#####################TEST_SESSION_START########################')
+    print('###############################################################')
     # display flags args
     print('checkpoints_dir\t\t\t: ', FLAGS.checkpoints_dir)
     print('model_name\t\t\t: ', FLAGS.model_name)
     print('batch_size\t\t\t: ', FLAGS.batch_size)
     print('dispaly_every_n_steps\t\t: ', FLAGS.dispaly_every_n_steps)
 
-    print("Testing Start")
+    #print("Testing Start")
     test_confusion_matrix_gender, test_confusion_matrix_age = test(DATA_SIZE)
-    print('Testing Done')
+    #print('Testing Done')
     print("Test Confusion Matrix of Gender")
     print_confusion_matrix(test_confusion_matrix_gender)
     print("Test Confusion Matrix of Age")
     print_confusion_matrix(test_confusion_matrix_age)
+    print('###############################################################')
+    print('##################TEST_SESSION_COMPLETE########################')
+    print('###############################################################')
 if __name__ == '__main__':
     main()
 

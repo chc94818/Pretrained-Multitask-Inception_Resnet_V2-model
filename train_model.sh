@@ -24,18 +24,18 @@ ALL_CHECKPOINT_DIR=/Multi-Task_CNN/pretrain_model/fine_tuned_all_model/
 MODEL_NAME=inception_resnet_v2.ckpt
 
 
-# Fine-tune only the fc layers with pretrained model for 5 epochs.
+# Fine-tune only the fc layers with pretrained model for 50 epochs.
 python train.py \
   --checkpoints_dir=${PRETRAINED_CHECKPOINT_DIR}\
   --trained_checkpoints_dir=${FC_CHECKPOINT_DIR} \
   --model_name=${MODEL_NAME}\
   --checkpoint_exclude_scopes=InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits \
   --trainable_scopes=InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits \
-  --epochs=1\
+  --epochs=50\
   --batch_size=16 \
   --learning_rate=0.01 \
-  --dispaly_every_n_steps=20 \
-  --save_every_n_steps=100
+  --dispaly_every_n_steps=100 \
+  --save_every_n_steps=500
 
 
 # Test fine-tuned model
@@ -46,18 +46,39 @@ python evaluate.py \
   --dispaly_every_n_steps=100
 
 
-# Fine-tune all layers with pretrained model for 5 epochs.
+# Fine-tune all layers with pretrained model for 100 epochs.
 python train.py \
   --checkpoints_dir=${FC_CHECKPOINT_DIR}\
   --trained_checkpoints_dir=${ALL_CHECKPOINT_DIR} \
   --model_name=${MODEL_NAME}\
   --checkpoint_exclude_scopes=InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits \
   --trainable_scopes=InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits \
-  --epochs=1\
+  --epochs=100\
   --batch_size=16 \
-  --learning_rate=0.01 \
-  --dispaly_every_n_steps=20 \
-  --save_every_n_steps=100
+  --learning_rate=0.0001 \
+  --dispaly_every_n_steps=100 \
+  --save_every_n_steps=500
+
+
+# Test fine-tuned model
+python evaluate.py \
+  --checkpoints_dir=${ALL_CHECKPOINT_DIR}\
+  --model_name=${MODEL_NAME}\
+  --batch_size=10 \
+  --dispaly_every_n_steps=100
+
+  # Fine-tune all layers with pretrained model for 200 epochs.
+python train.py \
+  --checkpoints_dir=${ALL_CHECKPOINT_DIR}\
+  --trained_checkpoints_dir=${ALL_CHECKPOINT_DIR} \
+  --model_name=${MODEL_NAME}\
+  --checkpoint_exclude_scopes=InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits \
+  --trainable_scopes=InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits \
+  --epochs=200\
+  --batch_size=16 \
+  --learning_rate=0.0001 \
+  --dispaly_every_n_steps=100 \
+  --save_every_n_steps=500
 
 
 # Test fine-tuned model

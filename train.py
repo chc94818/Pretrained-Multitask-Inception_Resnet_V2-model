@@ -17,7 +17,7 @@ import skimage.io as io
 
 from absl import app
 from absl import flags
-# Parameters
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # TFRecords 檔案名稱
 tfrecords_filename = 'train.tfrecords'
@@ -213,9 +213,7 @@ def train(DATA_SIZE):
         init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())            
         saver = tf.train.Saver(var_list=tf.global_variables())
         with tf.Session() as sess:                
-            print('###############################################################')
-            print('#####################TRAIN_SESSION_START#######################')
-            print('###############################################################')
+            
             # initial model and variables
             if os.path.join(FLAGS.checkpoints_dir, FLAGS.model_name) == checkpoints_path :
                 print ("Restore pretrained Start!")
@@ -224,7 +222,7 @@ def train(DATA_SIZE):
                 #init_fn(sess)
                 print ("Restore  Complete!")
             elif FLAGS.trained_checkpoints_dir == FLAGS.checkpoints_dir:
-                print ("Restore fine-tuned Start!")                    
+                print ("Restore continue fine-tuned Start!")                    
                 sess.run(init_op)
                 saver.restore(sess, os.path.join(FLAGS.checkpoints_dir, FLAGS.model_name))
                 print ("Restore  Finished!")
@@ -244,8 +242,8 @@ def train(DATA_SIZE):
             batch_num_per_epoch = int(DATA_SIZE/FLAGS.batch_size)
             batch_num_total = batch_num_per_epoch * FLAGS.epochs          
             print('Total Steps : ', batch_num_total)    
-            print('Gloabal Steps : ', g_step)
-            
+            print('Start Gloabal Steps : ', g_step)
+            print('###############################################################')
             while g_step <= batch_num_total:
                 # training session     
                 pred_g, pred_a, expc_g, expc_a, acc_g, acc_a, loss_logit_g, loss_logit_a,\
@@ -256,8 +254,8 @@ def train(DATA_SIZE):
                 #print("vtt, ", vtt)
 
                 # display training status
-                if g_step % FLAGS.dispaly_every_n_steps == 0:
-                    print("Epoch : " + str(int((g_step-1)/batch_num_per_epoch)) +"/"+str(FLAGS.epochs)+" Iter : " + str(g_step)+"/"+str(batch_num_total)+\
+                if g_step % FLAGS.dispaly_every_n_steps == 0 or g_step== batch_num_total:
+                    print("Epoch : " + str(int((g_step)/batch_num_per_epoch)) +"/"+str(FLAGS.epochs)+" Iter : " + str(g_step)+"/"+str(batch_num_total)+\
                         "\nTraining Total Loss \t\t= {:.12f}".format(loss_t) +\
                         "\nTraining Gender Logits Loss \t= {:.12f}".format(loss_logit_g) +\
                         "\nTraining Gender AuxLogits Loss \t= {:.12f}".format(loss_auxlogit_g) +\
@@ -271,16 +269,19 @@ def train(DATA_SIZE):
                     print("Age ACC \t: ",acc_a)
                     print("Age Expected Value \t: ",expc_a)   
                     print("Age Predict Value \t: ",pred_a)
+                    print('###############################################################')
                 # middle-term save model
                 if g_step % FLAGS.save_every_n_steps == 0:
                     print("Step Save Strart, Iter : ", str(g_step))
                     saver.save(sess, os.path.join(FLAGS.trained_checkpoints_dir, FLAGS.model_name))
                     print("Step Save Complete")
+                    print('###############################################################')
             
             # final-term save model
             print("Final Save Strart")
             saver.save(sess, os.path.join(FLAGS.trained_checkpoints_dir, FLAGS.model_name))
             print("Final Save Complete")
+            print('###############################################################')
             # close thread queue
             coord.request_stop()
             coord.join(threads)
@@ -288,7 +289,9 @@ def train(DATA_SIZE):
 def main(argv=None):
     # get total data size
     DATA_SIZE = get_data_size()
-
+    print('###############################################################')
+    print('#####################TRAIN_SESSION_START#######################')
+    print('###############################################################')
     # display flags args
     print('checkpoints_dir\t\t\t: ', FLAGS.checkpoints_dir)
     print('trained_checkpoints_dir\t\t: ', FLAGS.trained_checkpoints_dir)
@@ -302,9 +305,12 @@ def main(argv=None):
     print('save_every_n_steps\t\t: ', FLAGS.save_every_n_steps)
 
     # training start
-    print("Training Start")
+    #print("Training Start")
     train(DATA_SIZE)
-    print('Training Done')
+    #print('Training Done')
+    print('###############################################################')
+    print('##################TRAIN_SESSION_COMPLETE#######################')
+    print('###############################################################')
 if __name__ == '__main__':
     main()
 
