@@ -157,7 +157,7 @@ def inception_resnet_v2_base(inputs,
   with tf.variable_scope(scope, 'InceptionResnetV2', [inputs]):
     with slim.arg_scope([slim.conv2d, slim.max_pool2d, slim.avg_pool2d],
                         stride=1, padding='SAME'):
-      print(' InceptionResnetV2 namescope : ', tf.get_default_graph().get_name_scope())
+      #print('InceptionResnetV2 namescope : ', tf.get_default_graph().get_name_scope())
       # 149 x 149 x 32
       net = slim.conv2d(inputs, 32, 3, stride=2, padding=padding,
                         scope='Conv2d_1a_3x3')
